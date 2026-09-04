@@ -53,7 +53,7 @@ class MainActivity : ComponentActivity() {
 
             MyApplicationTheme(
                 darkTheme = isDark, 
-                preset = displaySettings.themePreset,
+                primaryColorHex = displaySettings.customAppColor,
                 fontScale = displaySettings.fontSize.scaleFactor
             ) {
                 CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
@@ -130,7 +130,6 @@ fun AssetTreeMainScreen(viewModel: AssetTreeViewModel, isDark: Boolean) {
                 onOpenExcelImport = { viewModel.setExcelImportOpen(true) },
                 onOpenSymbolBook = { viewModel.setSymbolBookOpen(true) },
                 onOpenSettings = { viewModel.setSettingsOpen(true) },
-                onSelectThemePreset = { viewModel.onUpdateThemePreset(it) }
             )
         },
         containerColor = AppTheme.colors.background
@@ -204,6 +203,15 @@ fun AssetTreeMainScreen(viewModel: AssetTreeViewModel, isDark: Boolean) {
 
                         AppViewMode.BAR_CHART -> {
                             BarChartView(
+                                activeView = activeView,
+                                onSelectView = { viewModel.setActiveView(it) },
+                                rootCalculated = root,
+                                settings = displaySettings,
+                                onSelectNodeDetails = { viewModel.setDetailsNode(it) }
+                            )
+                        }
+                        AppViewMode.PIE_CHART -> {
+                            PieChartView(
                                 activeView = activeView,
                                 onSelectView = { viewModel.setActiveView(it) },
                                 rootCalculated = root,
@@ -342,7 +350,9 @@ fun AssetTreeMainScreen(viewModel: AssetTreeViewModel, isDark: Boolean) {
             onExportBackupJson = { viewModel.repository.exportBackupJson() },
             onImportBackupJson = { viewModel.onRestoreJsonBackup(it) },
             onResetAllData = { viewModel.onResetAllData() },
-            onWipeFinancialData = { viewModel.onWipeDatabaseToZero() }
+            onWipeFinancialData = { viewModel.onWipeDatabaseToZero() },
+            onSaveCurrentSettingsAsDefault = { viewModel.saveCurrentSettingsAsDefault() },
+            onRestoreSettingsToDefault = { viewModel.restoreSettingsToDefault() }
         )
     }
 

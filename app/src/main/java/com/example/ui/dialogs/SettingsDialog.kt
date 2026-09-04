@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.example.data.model.AppThemePreset
+import com.example.data.model.AppViewMode
 import com.example.data.model.CalculatedNode
 import com.example.data.model.CurrencyUnit
 import com.example.data.model.DisplaySettings
@@ -47,7 +47,9 @@ fun SettingsDialog(
     onExportBackupJson: suspend () -> String,
     onImportBackupJson: (String) -> Unit,
     onResetAllData: () -> Unit,
-    onWipeFinancialData: () -> Unit = {}
+    onWipeFinancialData: () -> Unit = {},
+    onSaveCurrentSettingsAsDefault: () -> Unit = {},
+    onRestoreSettingsToDefault: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
@@ -58,6 +60,7 @@ fun SettingsDialog(
     var backupJsonContent by remember { mutableStateOf("") }
     var restoreJsonInput by remember { mutableStateOf("") }
     var showResetConfirm by remember { mutableStateOf(false) }
+    var selectedAssetForColor by remember { mutableStateOf<String?>(null) }
     var showWipeConfirm by remember { mutableStateOf(false) }
 
     Dialog(
@@ -144,29 +147,7 @@ fun SettingsDialog(
                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Palette,
-                                    contentDescription = null,
-                                    tint = colors.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = "پالت رنگ و تم اپلیکیشن",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.textPrimary
-                                )
-                            }
 
-                            Text(
-                                text = "حالت تیره/روشن و پالت رنگی سازمانی برنامه را از این بخش انتخاب کنید.",
-                                fontSize = 11.sp,
-                                color = colors.textSecondary
-                            )
 
                             // سطر حالت روز و شب (وظیفه ۵)
                             Row(
@@ -200,11 +181,7 @@ fun SettingsDialog(
                                             fontSize = 11.sp,
                                             color = if (isSys) Color.White else colors.textPrimary
                                         )
-                                        Text(
-                                            text = "اتوماتیک",
-                                            fontSize = 9.sp,
-                                            color = if (isSys) Color.White.copy(alpha = 0.8f) else colors.textSecondary
-                                        )
+                                        
                                     }
                                 }
 
@@ -230,16 +207,12 @@ fun SettingsDialog(
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Text(
-                                            text = "حالت شب",
+                                            text = "شب",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 11.sp,
                                             color = if (isDark) Color.White else colors.textPrimary
                                         )
-                                        Text(
-                                            text = "تیره (Dark)",
-                                            fontSize = 9.sp,
-                                            color = if (isDark) Color.White.copy(alpha = 0.8f) else colors.textSecondary
-                                        )
+                                        
                                     }
                                 }
 
@@ -265,72 +238,42 @@ fun SettingsDialog(
                                             modifier = Modifier.size(20.dp)
                                         )
                                         Text(
-                                            text = "حالت روز",
+                                            text = "روز",
                                             fontWeight = FontWeight.Bold,
                                             fontSize = 11.sp,
                                             color = if (isLight) Color.White else colors.textPrimary
                                         )
-                                        Text(
-                                            text = "روشن (Light)",
-                                            fontSize = 9.sp,
-                                            color = if (isLight) Color.White.copy(alpha = 0.8f) else colors.textSecondary
-                                        )
+                                        
                                     }
                                 }
                             }
-
-                            // Theme Palette Preset Selection
-                            HorizontalDivider(color = colors.border.copy(alpha = 0.5f))
-                            Text(
-                                text = "انتخاب تم و پالت رنگی برنامه:",
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.textPrimary
-                            )
-
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                AppThemePreset.values().toList().chunked(2).forEach { pair ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        pair.forEach { preset ->
-                                            val isSel = settings.themePreset == preset
-                                            Surface(
-                                                shape = RoundedCornerShape(10.dp),
-                                                color = if (isSel) Color(preset.primaryHex).copy(alpha = 0.15f) else colors.surface,
-                                                border = androidx.compose.foundation.BorderStroke(
-                                                    if (isSel) 2.dp else 1.dp,
-                                                    if (isSel) Color(preset.primaryHex) else colors.border
-                                                ),
-                                                modifier = Modifier
-                                                    .weight(1f)
-                                                    .clickable { onUpdateSettings(settings.copy(themePreset = preset)) }
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    Box(
-                                                        modifier = Modifier
-                                                            .size(18.dp)
-                                                            .clip(RoundedCornerShape(4.dp))
-                                                            .background(Color(preset.primaryHex))
-                                                    )
-                                                    Text(
-                                                        text = preset.labelFa,
-                                                        fontSize = 11.sp,
-                                                        fontWeight = if (isSel) FontWeight.Bold else FontWeight.Normal,
-                                                        color = if (isSel) Color(preset.primaryHex) else colors.textPrimary
-                                                    )
-                                                }
-                                            }
-                                        }
-                                        if (pair.size == 1) {
-                                            Spacer(modifier = Modifier.weight(1f))
-                                        }
-                                    }
+                            
+                            HorizontalDivider(color = colors.border.copy(alpha = 0.5f), modifier = Modifier.padding(vertical = 4.dp))
+                            
+                            Surface(
+                                shape = RoundedCornerShape(10.dp),
+                                color = colors.surface,
+                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.border),
+                                modifier = Modifier.fillMaxWidth().clickable { selectedAssetForColor = "AppThemePrimaryColor" }
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Text(
+                                        text = "رنگ تم برنامه",
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = colors.textPrimary
+                                    )
+                                    Box(
+                                        modifier = Modifier
+                                            .size(24.dp)
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(Color(settings.customAppColor))
+                                            .border(1.dp, colors.border, RoundedCornerShape(4.dp))
+                                    )
                                 }
                             }
                         }
@@ -343,74 +286,46 @@ fun SettingsDialog(
                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(6.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.AutoGraph,
-                                    contentDescription = null,
-                                    tint = colors.primary,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = "رنگ‌بندی تخصصی کلاس‌های دارایی در نمودارها",
-                                    fontSize = 13.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = colors.textPrimary
-                                )
-                            }
 
-                            Text(
-                                text = "راهنمای رنگ‌بندی ثابت و سایه‌دار دارایی‌ها در تمام نمودارها (نقشه درختی، خورشیدی، درختی مدرن و نوار انباشته):",
-                                fontSize = 10.5.sp,
-                                color = colors.textSecondary
-                            )
+                            SettingTitleWithDescription("رنگ بندی نوع دارایی", "راهنمای رنگ‌بندی ثابت و سایه‌دار دارایی‌ها در تمام نمودارها (نقشه درختی، خورشیدی، درختی مدرن و نوار انباشته):")
 
                             val assetColorCategories = listOf(
-                                Triple("مس و کاتد مس", "انواع قرمز اکسیدی و شاداب", Color(0xFFD32F2F)),
-                                Triple("نقره و شمش نقره", "رنگ نقره‌ای و طوسی متالیک", Color(0xFF90A4AE)),
-                                Triple("نقدینگی، ریال، دلار، سپرده و صندوق ثابت", "انواع سبز زمردی و نعنایی", Color(0xFF00897B)),
-                                Triple("املاک، مستغلات و ساختمان", "انواع قهوه‌ای و خاکی", Color(0xFF8D6E63)),
-                                Triple("خودرو و وسایل نقلیه", "رنگ بنفش", Color(0xFF8E24AA)),
-                                Triple("سهام و بورس", "رنگ آبی سلطنتی", Color(0xFF1565C0)),
-                                Triple("سایر دارایی‌ها", "رنگ‌های مکمل و متمایز", Color(0xFFE65100))
+                                Pair("مس و کاتد مس", Color(0xFFD32F2F)),
+                                Pair("نقره و شمش نقره", Color(0xFF90A4AE)),
+                                Pair("نقدینگی، ریال، دلار، سپرده و صندوق ثابت", Color(0xFF00897B)),
+                                Pair("املاک، مستغلات و ساختمان", Color(0xFF8D6E63)),
+                                Pair("خودرو و وسایل نقلیه", Color(0xFF8E24AA)),
+                                Pair("سهام و بورس", Color(0xFF1565C0)),
+                                Pair("سایر دارایی‌ها", Color(0xFFE65100))
                             )
 
                             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                assetColorCategories.forEach { (title, desc, badgeColor) ->
+                                assetColorCategories.forEach { (title, defaultColor) ->
+                                    val currentHex = settings.customAssetColors[title]
+                                    val activeColor = if (currentHex != null) Color(currentHex) else defaultColor
                                     Surface(
                                         shape = RoundedCornerShape(8.dp),
                                         color = colors.surface,
                                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f)),
-                                        modifier = Modifier.fillMaxWidth()
+                                        modifier = Modifier.fillMaxWidth().clickable { selectedAssetForColor = title }
                                     ) {
                                         Row(
-                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 10.dp),
                                             verticalAlignment = Alignment.CenterVertically,
                                             horizontalArrangement = Arrangement.SpaceBetween
                                         ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Box(
-                                                    modifier = Modifier
-                                                        .size(16.dp)
-                                                        .clip(RoundedCornerShape(4.dp))
-                                                        .background(badgeColor)
-                                                )
-                                                Text(
-                                                    text = title,
-                                                    fontSize = 11.sp,
-                                                    fontWeight = FontWeight.Bold,
-                                                    color = colors.textPrimary
-                                                )
-                                            }
                                             Text(
-                                                text = desc,
-                                                fontSize = 9.5.sp,
-                                                color = colors.textSecondary
+                                                text = title,
+                                                fontSize = 11.5.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                color = colors.textPrimary
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .size(24.dp)
+                                                    .clip(RoundedCornerShape(4.dp))
+                                                    .background(activeColor)
+                                                    .border(1.dp, colors.border, RoundedCornerShape(4.dp))
                                             )
                                         }
                                     }
@@ -487,123 +402,45 @@ fun SettingsDialog(
                                         color = colors.textPrimary
                                     )
                                 }
-
-                                val currentOrder = settings.customViewOrder.ifEmpty {
-                                listOf(
-                                    com.example.data.model.AppViewMode.TREEMAP,
-                                    com.example.data.model.AppViewMode.CLASSIC_TREE,
-                                    com.example.data.model.AppViewMode.TREE,
-                                    com.example.data.model.AppViewMode.CHART,
-                                    com.example.data.model.AppViewMode.BAR_CHART,
-                                    com.example.data.model.AppViewMode.ANALYTICS
-                                )
                             }
-
-                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            
+                            val currentOrder = settings.customViewOrder.ifEmpty { AppViewMode.values().toList() }
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 currentOrder.forEachIndexed { index, mode ->
-                                    val icon = when (mode) {
-                                        com.example.data.model.AppViewMode.TREEMAP -> Icons.Default.Dashboard
-                                        com.example.data.model.AppViewMode.CLASSIC_TREE -> Icons.Default.FormatListBulleted
-                                        com.example.data.model.AppViewMode.TREE -> Icons.Default.AccountTree
-                                        com.example.data.model.AppViewMode.CHART -> Icons.Default.PieChart
-                                        com.example.data.model.AppViewMode.BAR_CHART -> Icons.Default.BarChart
-                                        com.example.data.model.AppViewMode.ANALYTICS -> Icons.Default.Analytics
-                                    }
-
-                                    Surface(
-                                        shape = RoundedCornerShape(8.dp),
-                                        color = colors.surface,
-                                        border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f)),
-                                        modifier = Modifier.fillMaxWidth()
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().background(colors.surface, RoundedCornerShape(8.dp)).border(1.dp, colors.border, RoundedCornerShape(8.dp)).padding(horizontal = 8.dp, vertical = 6.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 10.dp, vertical = 6.dp),
-                                            verticalAlignment = Alignment.CenterVertically,
-                                            horizontalArrangement = Arrangement.SpaceBetween
-                                        ) {
-                                            Row(
-                                                verticalAlignment = Alignment.CenterVertically,
-                                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                            ) {
-                                                Surface(
-                                                    shape = RoundedCornerShape(4.dp),
-                                                    color = colors.surfaceVariant
-                                                ) {
-                                                    val numDisplay = if (settings.usePersianDigits) {
-                                                        com.example.utils.NumberFormatUtils.toPersianDigits((index + 1).toString())
-                                                    } else {
-                                                        (index + 1).toString()
+                                        Text(mode.titleFa, fontSize = 12.sp, color = colors.textPrimary)
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            IconButton(
+                                                onClick = {
+                                                    if (index > 0) {
+                                                        val mutable = currentOrder.toMutableList()
+                                                        val temp = mutable[index]
+                                                        mutable[index] = mutable[index - 1]
+                                                        mutable[index - 1] = temp
+                                                        onUpdateSettings(settings.copy(customViewOrder = mutable))
                                                     }
-                                                    Text(
-                                                        text = numDisplay,
-                                                        fontSize = 11.sp,
-                                                        fontWeight = FontWeight.Bold,
-                                                        color = colors.primary,
-                                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
-                                                    )
-                                                }
-
-                                                Icon(
-                                                    imageVector = icon,
-                                                    contentDescription = null,
-                                                    tint = colors.primary,
-                                                    modifier = Modifier.size(16.dp)
-                                                )
-
-                                                Text(
-                                                    text = mode.titleFa,
-                                                    fontSize = 12.sp,
-                                                    fontWeight = FontWeight.Medium,
-                                                    color = colors.textPrimary
-                                                )
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Default.ArrowUpward, contentDescription = "بالا", tint = if (index > 0) colors.primary else colors.textSecondary)
                                             }
-
-                                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                                // Move Up Button
-                                                IconButton(
-                                                    onClick = {
-                                                        if (index > 0) {
-                                                            val mutable = currentOrder.toMutableList()
-                                                            val temp = mutable[index]
-                                                            mutable[index] = mutable[index - 1]
-                                                            mutable[index - 1] = temp
-                                                            onUpdateSettings(settings.copy(customViewOrder = mutable))
-                                                        }
-                                                    },
-                                                    enabled = index > 0,
-                                                    modifier = Modifier.size(28.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.ArrowUpward,
-                                                        contentDescription = "انتقال به بالا",
-                                                        tint = if (index > 0) colors.primary else colors.textSecondary.copy(alpha = 0.3f),
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                }
-
-                                                // Move Down Button
-                                                IconButton(
-                                                    onClick = {
-                                                        if (index < currentOrder.size - 1) {
-                                                            val mutable = currentOrder.toMutableList()
-                                                            val temp = mutable[index]
-                                                            mutable[index] = mutable[index + 1]
-                                                            mutable[index + 1] = temp
-                                                            onUpdateSettings(settings.copy(customViewOrder = mutable))
-                                                        }
-                                                    },
-                                                    enabled = index < currentOrder.size - 1,
-                                                    modifier = Modifier.size(28.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.ArrowDownward,
-                                                        contentDescription = "انتقال به پایین",
-                                                        tint = if (index < currentOrder.size - 1) colors.primary else colors.textSecondary.copy(alpha = 0.3f),
-                                                        modifier = Modifier.size(16.dp)
-                                                    )
-                                                }
+                                            IconButton(
+                                                onClick = {
+                                                    if (index < currentOrder.size - 1) {
+                                                        val mutable = currentOrder.toMutableList()
+                                                        val temp = mutable[index]
+                                                        mutable[index] = mutable[index + 1]
+                                                        mutable[index + 1] = temp
+                                                        onUpdateSettings(settings.copy(customViewOrder = mutable))
+                                                    }
+                                                },
+                                                modifier = Modifier.size(28.dp)
+                                            ) {
+                                                Icon(Icons.Default.ArrowDownward, contentDescription = "پایین", tint = if (index < currentOrder.size - 1) colors.primary else colors.textSecondary)
                                             }
                                         }
                                     }
@@ -619,8 +456,7 @@ fun SettingsDialog(
                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("آیتم‌های نمایشی جلوی نام نودها", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                            Text("تنظیم نمایش یا عدم نمایش درصد از کل، درصد از هم‌گروه و مبلغ خلاصه شده جلوی هر دارایی", fontSize = 10.sp, color = colors.textSecondary)
+                            SettingTitleWithDescription("آیتم‌های نمایشی جلوی نام نودها", "تنظیم نمایش یا عدم نمایش درصد از کل، درصد از هم‌گروه و مبلغ خلاصه شده جلوی هر دارایی")
 
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
@@ -694,11 +530,7 @@ fun SettingsDialog(
                                             fontWeight = FontWeight.Bold,
                                             color = if (settings.currencyUnit == CurrencyUnit.TOMAN) Color.White else colors.textPrimary
                                         )
-                                        Text(
-                                            "(۱۰ ریال)",
-                                            fontSize = 10.sp,
-                                            color = if (settings.currencyUnit == CurrencyUnit.TOMAN) Color.White.copy(alpha = 0.8f) else colors.textSecondary
-                                        )
+
                                     }
                                 }
 
@@ -719,11 +551,7 @@ fun SettingsDialog(
                                             fontWeight = FontWeight.Bold,
                                             color = if (settings.currencyUnit == CurrencyUnit.RIAL) Color.White else colors.textPrimary
                                         )
-                                        Text(
-                                            "(واحد پایه)",
-                                            fontSize = 10.sp,
-                                            color = if (settings.currencyUnit == CurrencyUnit.RIAL) Color.White.copy(alpha = 0.8f) else colors.textSecondary
-                                        )
+
                                     }
                                 }
                             }
@@ -744,8 +572,7 @@ fun SettingsDialog(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
-                                Text("اعداد و ارقام به خط فارسی", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
-                                Text("نمایش مبالغ و درصدها با ارقام فارسی (۱۲۳,۴۵۶)", fontSize = 10.sp, color = colors.textSecondary)
+                                SettingTitleWithDescription("اعداد و ارقام به خط فارسی", "نمایش مبالغ و درصدها با ارقام فارسی (۱۲۳,۴۵۶)")
                             }
                             Switch(
                                 checked = settings.usePersianDigits,
@@ -794,6 +621,49 @@ fun SettingsDialog(
                     }
 
                     }
+                    
+                    if (selectedTabIndex == 0 || selectedTabIndex == 1) {
+                        // Default Settings Card
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = colors.surfaceVariant.copy(alpha = 0.5f)),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
+                        ) {
+                            Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                SettingTitleWithDescription("تنظیمات پیش‌فرض", "ذخیره تنظیمات فعلی (شامل تم، منوها، واحد پول و...) به عنوان پیش‌فرض، یا بازنشانی به حالت پیش‌فرض.")
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Button(
+                                        onClick = { 
+                                            onSaveCurrentSettingsAsDefault()
+                                            android.widget.Toast.makeText(context, "تنظیمات فعلی به عنوان پیش‌فرض ذخیره شد.", android.widget.Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = Color.White),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text("ذخیره به عنوان پیش‌فرض", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    }
+                                    
+                                    OutlinedButton(
+                                        onClick = { 
+                                            onRestoreSettingsToDefault()
+                                            android.widget.Toast.makeText(context, "تنظیمات به حالت پیش‌فرض بازگردانی شد.", android.widget.Toast.LENGTH_SHORT).show()
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.textPrimary),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, colors.primary),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text("بازگشت به پیش‌فرض", fontSize = 10.5.sp, fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
+                                    }
+                                }
+                            }
+                        }
+                    }
                     if (selectedTabIndex == 2) {
                     // 5. Data Backup & Restore
                     Card(
@@ -802,7 +672,7 @@ fun SettingsDialog(
                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("پشتیبان‌گیری و بازیابی داده‌ها (JSON)", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
+                            Text("پشتیبان گیری و بازیابی اطلاعات", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary)
                             Text("تهیه نسخه پشتیبان از کل ساختار درخت دارایی و تنظیمات جهت انتقال به دستگاه دیگر.", fontSize = 10.sp, color = colors.textSecondary)
 
                             Row(
@@ -832,7 +702,7 @@ fun SettingsDialog(
                                 ) {
                                     Icon(Icons.Default.Upload, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("بازیابی JSON", fontSize = 11.sp, color = colors.textPrimary)
+                                    Text("بازیابی", fontSize = 11.sp, color = colors.textPrimary)
                                 }
                             }
                         }
@@ -845,8 +715,7 @@ fun SettingsDialog(
                         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f))
                     ) {
                         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("بازنشانی به پرتفوی اولیه نمونه", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = colors.primary)
-                            Text("بازگردانی دارایی‌های نمونه پیش‌فرض اپلیکیشن شامل طلا، سهام و ارز.", fontSize = 10.sp, color = colors.textSecondary)
+                            SettingTitleWithDescription("بازنشانی به پرتفوی اولیه نمونه", "بازگردانی دارایی‌های نمونه پیش‌فرض اپلیکیشن شامل طلا، سهام و ارز.")
 
                             OutlinedButton(
                                 onClick = { showResetConfirm = true },
@@ -1010,6 +879,54 @@ fun SettingsDialog(
         }
     }
 
+
+    if (selectedAssetForColor != null) {
+        val colorPalette = listOf(
+            0xFFD32F2F, 0xFFC2185B, 0xFF7B1FA2, 0xFF512DA8, 0xFF303F9F, 0xFF1976D2, 0xFF0288D1,
+            0xFF0097A7, 0xFF00796B, 0xFF388E3C, 0xFF689F38, 0xFFAFB42B, 0xFFFBC02D, 0xFFFFA000,
+            0xFFF57C00, 0xFFE64A19, 0xFF5D4037, 0xFF616161, 0xFF455A64, 0xFF90A4AE, 0xFF9E9E9E,
+            0xFFBDBDBD, 0xFFE0E0E0, 0xFFFFFFFF
+        )
+        AlertDialog(
+            onDismissRequest = { selectedAssetForColor = null },
+            title = { Text("انتخاب رنگ برای $selectedAssetForColor", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = colors.textPrimary) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    colorPalette.chunked(6).forEach { rowColors ->
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            rowColors.forEach { hex ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(Color(hex))
+                                        .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
+                                        .clickable {
+                                            if (selectedAssetForColor == "AppThemePrimaryColor") {
+                                                onUpdateSettings(settings.copy(customAppColor = hex))
+                                            } else {
+                                                val newColors = settings.customAssetColors.toMutableMap()
+                                                newColors[selectedAssetForColor!!] = hex
+                                                onUpdateSettings(settings.copy(customAssetColors = newColors))
+                                            }
+                                            selectedAssetForColor = null
+                                        }
+                                )
+                            }
+                            repeat(6 - rowColors.size) { Spacer(modifier = Modifier.size(36.dp)) }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { selectedAssetForColor = null }) {
+                    Text("بستن")
+                }
+            },
+            containerColor = colors.surface
+        )
+    }
+
     if (showResetConfirm) {
         AlertDialog(
             onDismissRequest = { showResetConfirm = false },
@@ -1162,4 +1079,32 @@ fun SettingsDialog(
         }
     }
 }
+
+@Composable
+fun SettingTitleWithDescription(title: String, description: String) {
+    var expanded by remember { mutableStateOf(false) }
+    val colors = AppTheme.colors
+    Column(modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }) {
+        Text(
+            text = title,
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = colors.textPrimary,
+            modifier = Modifier.padding(vertical = 4.dp)
+        )
+        androidx.compose.animation.AnimatedVisibility(visible = expanded) {
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = colors.surfaceVariant,
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp)
+            ) {
+                Text(
+                    text = description,
+                    fontSize = 10.sp,
+                    color = colors.textSecondary,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+        }
+    }
 }

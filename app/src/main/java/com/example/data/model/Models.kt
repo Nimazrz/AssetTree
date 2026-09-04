@@ -75,21 +75,6 @@ enum class AppFontSize(val labelFa: String, val scaleFactor: Float) {
     EXTRA_LARGE("خیلی بزرگ", 1.30f)
 }
 
-enum class AppThemePreset(
-    val labelFa: String,
-    val primaryHex: Long,
-    val darkBgHex: Long,
-    val lightBgHex: Long
-) {
-    NAVY_CLASSIC("سرمه‌ای", 0xFF005FB1, 0xFF090A0E, 0xFFEAEFF5),
-    EMERALD_GOLD("زمردی", 0xFF059669, 0xFF061410, 0xFFEBF6EE),
-    RUBY_ROYAL("یاقوتی", 0xFFE11D48, 0xFF14080B, 0xFFFBECEE),
-    OCEAN_TEAL("فیروزه‌ای", 0xFF0891B2, 0xFF041217, 0xFFEBF8FA),
-    PURPLE_MODERN("بنفش", 0xFF7C3AED, 0xFF0F0818, 0xFFF4ECFB),
-    GRAY_NEUTRAL("خاکستری", 0xFF64748B, 0xFF111827, 0xFFF1F5F9),
-    ORANGE_WARM("نارنجی", 0xFFEA580C, 0xFF1C1917, 0xFFFFF7ED),
-    BROWN_EARTH("قهوه‌ای", 0xFF92400E, 0xFF1E1B18, 0xFFFEF3C7)
-}
 
 enum class AppViewMode(val titleFa: String) {
     TREEMAP("نقشه دارایی"),
@@ -97,6 +82,7 @@ enum class AppViewMode(val titleFa: String) {
     TREE("درختی مدرن"),
     CHART("خورشیدی"),
     BAR_CHART("میله ای"),
+    PIE_CHART("دایره ای"),
     ANALYTICS("داشبورد")
 }
 
@@ -111,15 +97,17 @@ data class DisplaySettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val privacyMode: Boolean = false,
     val fontSize: AppFontSize = AppFontSize.STANDARD,
-    val themePreset: AppThemePreset = AppThemePreset.NAVY_CLASSIC,
+    val customAppColor: Long = 0xFF005FB1,
     val customViewOrder: List<AppViewMode> = listOf(
         AppViewMode.TREEMAP,
         AppViewMode.CLASSIC_TREE,
         AppViewMode.TREE,
         AppViewMode.CHART,
         AppViewMode.BAR_CHART,
+        AppViewMode.PIE_CHART,
         AppViewMode.ANALYTICS
-    )
+    ),
+    val customAssetColors: Map<String, Long> = emptyMap()
 )
 
 enum class SortField(val labelFa: String) {

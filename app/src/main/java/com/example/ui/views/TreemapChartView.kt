@@ -15,9 +15,16 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -151,6 +158,9 @@ fun TreemapChartView(
         }
 
         // Main Treemap Visual Container
+        var scale by remember { mutableStateOf(1f) }
+        var offset by remember { mutableStateOf(Offset.Zero) }
+
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
@@ -178,6 +188,7 @@ fun TreemapChartView(
             if (widthPx > 10f && heightPx > 10f && displayedTotal > 0) {
                 val tiles = remember(displayedRoots, widthPx, heightPx, focusedParentId) {
                     computeTreemapLayout(
+            customAssetColors = settings.customAssetColors,
                         nodes = displayedRoots,
                         containerRect = Rect(0f, 0f, widthPx, heightPx),
                         totalValue = displayedTotal,
@@ -185,12 +196,36 @@ fun TreemapChartView(
                     )
                 }
 
-                Box(modifier = Modifier.fillMaxSize()) {
+                Box(modifier = Modifier
+                    .fillMaxSize()
+                    .pointerInput(Unit) {
+                        detectTransformGestures { _, pan, zoom, _ ->
+                            scale = (scale * zoom).coerceIn(1f, 5f)
+                            if (scale > 1f) {
+                                val maxX = (size.width * (scale - 1)) / 2
+                                val maxY = (size.height * (scale - 1)) / 2
+                                offset = Offset(
+                                    x = (offset.x + pan.x).coerceIn(-maxX, maxX),
+                                    y = (offset.y + pan.y).coerceIn(-maxY, maxY)
+                                )
+                            } else {
+                                offset = Offset.Zero
+                            }
+                        }
+                    }
+                    .graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                        translationX = offset.x
+                        translationY = offset.y
+                    }
+                ) {
                     tiles.forEach { tile ->
                         TreemapTileComposable(
                             tile = tile,
                             isSelected = selectedNode?.id == tile.node.id,
                             settings = settings,
+                            scale = scale,
                             onClick = { selectedNode = tile.node },
                             onDoubleClick = { onSelectNodeDetails(tile.node) }
                         )
@@ -206,6 +241,8 @@ fun TreemapChartView(
                 }
             }
         }
+
+        com.example.ui.components.SharedAssetLegend(settings)
 
         // Selected Tile Inspector Bottom Card
         AnimatedVisibility(
@@ -289,6 +326,7 @@ fun TreemapTileComposable(
     tile: TreemapTile,
     isSelected: Boolean,
     settings: DisplaySettings,
+    scale: Float,
     onClick: () -> Unit,
     onDoubleClick: () -> Unit
 ) {
@@ -303,15 +341,18 @@ fun TreemapTileComposable(
     val tileArea = widthPx * heightPx
     val dimensionScale = kotlin.math.sqrt(tileArea.toDouble()).toFloat()
 
-    // Dynamic font sizing strictly proportional to the tile area percentage (وظیفه ۲)
-    val nameFontSize = (dimensionScale * 0.125f).coerceIn(8.5f, 28f).sp
-    val percentFontSize = (dimensionScale * 0.155f).coerceIn(9.5f, 32f).sp
-    val valueFontSize = (dimensionScale * 0.085f).coerceIn(7.5f, 18f).sp
-    val compactFontSize = (dimensionScale * 0.10f).coerceIn(7.5f, 11.5f).sp
+    // Text scaling proportional to area and dynamically responding to zoom (وظیفه: تناسب با مساحت و زوم)
+    val nameFontSize = (dimensionScale * 0.055f).coerceIn(4f, 36f).sp
+    val percentFontSize = (dimensionScale * 0.07f).coerceIn(4.5f, 42f).sp
+    val valueFontSize = (dimensionScale * 0.04f).coerceIn(3.5f, 24f).sp
+    val compactFontSize = (dimensionScale * 0.05f).coerceIn(4f, 28f).sp
 
-    val showDetails = widthPx > 50f && heightPx > 34f
-    val showCompactText = widthPx > 26f && heightPx > 16f
-    val showValue = heightPx > 58f && widthPx > 65f
+    val effectiveWidth = widthPx * scale
+    val effectiveHeight = heightPx * scale
+
+    val showDetails = effectiveWidth > 50f && effectiveHeight > 34f
+    val showCompactText = effectiveWidth > 26f && effectiveHeight > 16f
+    val showValue = effectiveHeight > 58f && effectiveWidth > 65f
 
     Box(
         modifier = Modifier
@@ -409,6 +450,7 @@ fun TreemapTileComposable(
  *    using progressively darker shades of that same category's base color.
  */
 private fun computeTreemapLayout(
+    customAssetColors: Map<String, Long>,
     nodes: List<CalculatedNode>,
     containerRect: Rect,
     totalValue: Double,
@@ -422,7 +464,7 @@ private fun computeTreemapLayout(
     val categoryRects = sliceAndDice(nodes, containerRect, totalValue)
 
     categoryRects.forEach { (categoryNode, catRect) ->
-        val baseColor = AssetColorUtils.getPaletteForNode(categoryNode.name, categoryNode.categoryTag).primary
+        val baseColor = AssetColorUtils.getPaletteForNode(categoryNode.name, categoryNode.categoryTag, customAssetColors).primary
 
         if (categoryNode.children.isNotEmpty()) {
             // Subdivide parent rectangle among children with darker shades of parent's base color

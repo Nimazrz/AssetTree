@@ -27,7 +27,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.model.AppThemePreset
 import com.example.data.model.DisplaySettings
 import com.example.data.model.AppViewMode
 import com.example.ui.theme.AppTheme
@@ -48,14 +47,12 @@ fun AppTopBar(
     onOpenExcelImport: () -> Unit,
     onOpenSymbolBook: () -> Unit,
     onOpenSettings: () -> Unit,
-    onSelectThemePreset: (AppThemePreset) -> Unit = {}
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val colors = AppTheme.colors
     var showMenu by remember { mutableStateOf(false) }
-    var showPresetDialog by remember { mutableStateOf(false) }
-    var showExitConfirmDialog by remember { mutableStateOf(false) }
+        var showExitConfirmDialog by remember { mutableStateOf(false) }
     var showChartDropdown by remember { mutableStateOf(false) }
 
     // Real-time Persian Date & Time connected to device clock (updates every second)
@@ -166,8 +163,7 @@ fun AppTopBar(
                                 // تاریخ و ساعت زنده شمسی
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = colors.surface.copy(alpha = 0.95f),
-                                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.7f))
+                                    color = Color.Transparent
                                 ) {
                                     Text(
                                         text = persianDateTimeStr,
@@ -216,30 +212,7 @@ fun AppTopBar(
                                             .border(1.dp, colors.border.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
                                             .clip(RoundedCornerShape(14.dp))
                                     ) {
-                                        // Theme Colors & Mode Preset (وظیفه ۳: تجمیع حالت روز/شب در پالت رنگ)
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = "پالت و رنگ تم (حالت روز / شب)",
-                                                    fontSize = 13.sp,
-                                                    color = colors.textPrimary,
-                                                    fontWeight = FontWeight.Medium
-                                                )
-                                            },
-                                            leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Palette,
-                                                    contentDescription = null,
-                                                    tint = colors.primary
-                                                )
-                                            },
-                                            onClick = {
-                                                showMenu = false
-                                                showPresetDialog = true
-                                            }
-                                        )
 
-                                        HorizontalDivider(color = colors.border.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 8.dp))
 
                                         // Excel Import
                                         DropdownMenuItem(
@@ -448,171 +421,4 @@ fun AppTopBar(
     }
 
     // Theme Preset & Mode Selector Dialog (وظیفه ۳)
-    if (showPresetDialog) {
-        AlertDialog(
-            onDismissRequest = { showPresetDialog = false },
-            title = {
-                Text(
-                    text = "پالت رنگ و حالت روز / شب",
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = colors.textPrimary
-                )
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    // بخش حالت روز و شب
-                    Text(
-                        text = "حالت روشنایی صفحه:",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
-                        color = colors.textSecondary
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isDark) colors.surfaceVariant else colors.primaryContainer,
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                if (!isDark) colors.primary else colors.border
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    if (isDark) onToggleTheme()
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.LightMode,
-                                    contentDescription = null,
-                                    tint = if (!isDark) colors.primary else Color(0xFFFBBF24),
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "روز (روشن)",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = if (!isDark) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (!isDark) colors.primary else colors.textPrimary
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isDark) colors.primaryContainer else colors.surfaceVariant,
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                if (isDark) colors.primary else colors.border
-                            ),
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable {
-                                    if (!isDark) onToggleTheme()
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 6.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.DarkMode,
-                                    contentDescription = null,
-                                    tint = if (isDark) colors.primary else colors.textSecondary,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = "شب (تاریک)",
-                                    fontSize = 11.5.sp,
-                                    fontWeight = if (isDark) FontWeight.Bold else FontWeight.Normal,
-                                    color = if (isDark) colors.primary else colors.textPrimary
-                                )
-                            }
-                        }
-                    }
-
-                    HorizontalDivider(color = colors.border.copy(alpha = 0.6f))
-
-                    Text(
-                        text = "انتخاب رنگ تم:",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 12.sp,
-                        color = colors.textSecondary
-                    )
-
-                    AppThemePreset.values().forEach { preset ->
-                        val isSelected = settings.themePreset == preset
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) colors.primaryContainer else colors.surfaceVariant,
-                            border = androidx.compose.foundation.BorderStroke(
-                                1.dp,
-                                if (isSelected) colors.primary else colors.border
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable {
-                                    onSelectThemePreset(preset)
-                                    
-                                }
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(10.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .size(20.dp)
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(Color(preset.primaryHex))
-                                    )
-                                    Text(
-                                        text = preset.labelFa,
-                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                                        color = colors.textPrimary,
-                                        fontSize = 12.5.sp
-                                    )
-                                }
-                                if (isSelected) {
-                                    Icon(
-                                        imageVector = Icons.Default.Check,
-                                        contentDescription = null,
-                                        tint = colors.primary,
-                                        modifier = Modifier.size(18.dp)
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { showPresetDialog = false }) {
-                    Text("بستن", color = colors.primary)
-                }
-            }
-        )
     }
-}
-

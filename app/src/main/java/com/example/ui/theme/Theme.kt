@@ -15,7 +15,6 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-import com.example.data.model.AppThemePreset
 import androidx.compose.material3.Shapes
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.unit.dp
@@ -48,15 +47,14 @@ data class AppThemeColors(
     val cardHighlight: Color
 )
 
-fun getAppColorsForPreset(preset: AppThemePreset, isDark: Boolean): AppThemeColors {
-    val primaryColor = Color(preset.primaryHex)
+fun getAppColors(primaryHex: Long, isDark: Boolean): AppThemeColors {
+    val primaryColor = Color(primaryHex)
     return if (isDark) {
-        val bg = Color(preset.darkBgHex)
-        val surf = Color(preset.darkBgHex).copy(alpha = 1f)
+        val bg = Color(0xFF090A0E)
         val surfColor = Color(0xFF141620)
         AppThemeColors(
             isDark = true,
-            background = bg,
+            background = bg.copy(alpha=0.9f),
             surface = surfColor,
             surfaceVariant = Color(0xFF1B1E2B),
             border = Color(0xFF282D3E),
@@ -82,12 +80,12 @@ fun getAppColorsForPreset(preset: AppThemePreset, isDark: Boolean): AppThemeColo
             cardHighlight = Color(0xFF202434)
         )
     } else {
-        val bg = Color(preset.lightBgHex)
+        val bg = Color(0xFFFAFAFA)
         AppThemeColors(
             isDark = false,
-            background = bg,
-            surface = Color(0xFFFFFFFF),
-            surfaceVariant = Color(0xFFEEF1F8),
+            background = bg.copy(alpha=0.9f),
+            surface = Color(0xFFF2F4F7),
+            surfaceVariant = Color(0xFFE5E7EB),
             border = Color(0xFFDDE2EE),
             textPrimary = Color(0xFF0F172A),
             textSecondary = Color(0xFF475569),
@@ -104,7 +102,7 @@ fun getAppColorsForPreset(preset: AppThemePreset, isDark: Boolean): AppThemeColo
             warning = Color(0xFFD97706),
             warningContainer = Color(0xFFFEF3C7),
             onWarningContainer = Color(0xFF451A03),
-            inputBackground = Color(0xFFF8FAFC),
+            inputBackground = Color(0xFFF3F4F6),
             inputBorder = Color(0xFFCBD5E1),
             inputText = Color(0xFF0F172A),
             inputPlaceholder = Color(0xFF94A3B8),
@@ -113,8 +111,8 @@ fun getAppColorsForPreset(preset: AppThemePreset, isDark: Boolean): AppThemeColo
     }
 }
 
-val DarkAppColors = getAppColorsForPreset(AppThemePreset.NAVY_CLASSIC, true)
-val LightAppColors = getAppColorsForPreset(AppThemePreset.NAVY_CLASSIC, false)
+val DarkAppColors = getAppColors(0xFF005FB1, true)
+val LightAppColors = getAppColors(0xFF005FB1, false)
 
 val LocalAppThemeColors = staticCompositionLocalOf { LightAppColors }
 
@@ -195,14 +193,14 @@ private val LightColorScheme =
 fun MyApplicationTheme(
   darkTheme: Boolean = isSystemInDarkTheme(),
   dynamicColor: Boolean = false,
-  preset: AppThemePreset = AppThemePreset.NAVY_CLASSIC,
+  primaryColorHex: Long = 0xFF005FB1,
   fontScale: Float = 1.0f,
   content: @Composable () -> Unit,
 ) {
   val context = LocalContext.current
-  val appColors = remember(preset, darkTheme) { getAppColorsForPreset(preset, darkTheme) }
+  val appColors = remember(primaryColorHex, darkTheme) { getAppColors(primaryColorHex, darkTheme) }
 
-  val colorScheme = remember(preset, darkTheme, dynamicColor) {
+  val colorScheme = remember(primaryColorHex, darkTheme, dynamicColor) {
     if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
       if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
     } else if (darkTheme) {

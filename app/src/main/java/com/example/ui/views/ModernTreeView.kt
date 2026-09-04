@@ -114,178 +114,31 @@ fun ModernTreeView(
         list
     }
 
+    Column(modifier = Modifier.fillMaxSize()) {
     LazyColumn(
         modifier = Modifier
-            .fillMaxSize()
+            .fillMaxWidth()
+            .weight(1f)
             .testTag("modern_tree_list"),
         contentPadding = PaddingValues(horizontal = 8.dp, vertical = 6.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         // 1. Search & Toolbar Card
         item(key = "search_and_toolbar") {
-            Card(
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = colors.surface),
-                border = androidx.compose.foundation.BorderStroke(1.dp, colors.border),
-                elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 4.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(10.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    // Search Input
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { searchQuery = it },
-                        placeholder = { Text("جستجو در تمام دارایی‌ها و شاخه‌ها...", fontSize = 12.sp, color = colors.textSecondary) },
-                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp, color = colors.inputText),
-                        singleLine = true,
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                                tint = colors.primary,
-                                modifier = Modifier.size(18.dp)
-                            )
-                        },
-                        trailingIcon = {
-                            if (searchQuery.isNotEmpty()) {
-                                IconButton(onClick = { searchQuery = "" }) {
-                                    Icon(
-                                        imageVector = Icons.Default.Clear,
-                                        contentDescription = "پاک کردن",
-                                        tint = colors.textSecondary,
-                                        modifier = Modifier.size(16.dp)
-                                    )
-                                }
-                            }
-                        },
-                        shape = RoundedCornerShape(10.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = colors.inputText,
-                            unfocusedTextColor = colors.inputText,
-                            focusedContainerColor = colors.inputBackground,
-                            unfocusedContainerColor = colors.inputBackground,
-                            focusedBorderColor = colors.primary,
-                            unfocusedBorderColor = colors.border,
-                            cursorColor = colors.primary
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(48.dp)
-                    )
-
-                    // Toolbar: Sort and Controls
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Sort Controls
-                        var showSortMenu by remember { mutableStateOf(false) }
-                        Box {
-                            Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = colors.surfaceVariant,
-                                border = androidx.compose.foundation.BorderStroke(1.dp, colors.border),
-                                modifier = Modifier.clickable { showSortMenu = true }
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Sort,
-                                        contentDescription = null,
-                                        tint = colors.primary,
-                                        modifier = Modifier.size(15.dp)
-                                    )
-                                    Text(
-                                        text = sortConfig.field.labelFa,
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = colors.textPrimary
-                                    )
-                                    Text(
-                                        text = if (sortConfig.direction == SortDirection.DESC) "↓" else "↑",
-                                        fontSize = 11.sp,
-                                        fontWeight = FontWeight.Black,
-                                        color = colors.primary
-                                    )
-                                }
-                            }
-
-                            DropdownMenu(
-                                expanded = showSortMenu,
-                                onDismissRequest = { showSortMenu = false }
-                            ) {
-                                SortField.values().forEach { field ->
-                                    DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = field.labelFa,
-                                                fontSize = 12.sp,
-                                                color = colors.textPrimary,
-                                                fontWeight = if (sortConfig.field == field) FontWeight.Bold else FontWeight.Normal
-                                            )
-                                        },
-                                        onClick = {
-                                            val newDir = if (sortConfig.field == field) {
-                                                if (sortConfig.direction == SortDirection.DESC) SortDirection.ASC else SortDirection.DESC
-                                            } else {
-                                                SortDirection.DESC
-                                            }
-                                            onUpdateSort(SortConfig(field, newDir))
-                                            showSortMenu = false
-                                        }
-                                    )
-                                }
-                            }
-                        }
-
-                        // Expand / Collapse Controls (without blue add button)
-                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                            FilledTonalIconButton(
-                                onClick = { expandAll(rootCalculated) },
-                                modifier = Modifier.size(30.dp),
-                                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                    containerColor = colors.surfaceVariant,
-                                    contentColor = colors.textSecondary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.UnfoldMore,
-                                    contentDescription = "باز کردن همه",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-
-                            FilledTonalIconButton(
-                                onClick = { collapseAll() },
-                                modifier = Modifier.size(30.dp),
-                                colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                    containerColor = colors.surfaceVariant,
-                                    contentColor = colors.textSecondary
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.UnfoldLess,
-                                    contentDescription = "بستن همه",
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    }
-                }
-            }
+            SharedViewHeader(
+                activeView = activeView,
+                settings = settings,
+                onSelectView = onSelectView,
+                searchQuery = searchQuery,
+                onSearchChange = { searchQuery = it },
+                sortConfig = sortConfig,
+                onUpdateSort = onUpdateSort,
+                onExpandAll = { expandAll(rootCalculated) },
+                onCollapseAll = { collapseAll() },
+                showSearchAndSort = true
+            )
         }
-
+        
         // 3. Tree Items List
         items(visibleNodes, key = { it.id }) { node ->
             val isExpanded = expandedNodeIds[node.id] ?: false
@@ -334,6 +187,8 @@ fun ModernTreeView(
             }
         }
     }
+    com.example.ui.components.SharedAssetLegend(settings)
+}
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -365,7 +220,7 @@ fun ModernTreeNodeRow(
         AssetColorUtils.getPaletteForNode(node.name, node.categoryTag)
     }
     val nodeShadedColor = remember(node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark) {
-        AssetColorUtils.getNodeShadedColor(node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark)
+        AssetColorUtils.getNodeShadedColor(settings.customAssetColors, node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark)
     }
 
     val indent = (node.depth * 14).dp

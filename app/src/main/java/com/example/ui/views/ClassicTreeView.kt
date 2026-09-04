@@ -182,9 +182,10 @@ fun ClassicTreeView(
 
     val horizontalScrollState = rememberScrollState()
 
+    Column(modifier = Modifier.fillMaxSize()) {
     Box(
         modifier = Modifier
-            .fillMaxSize()
+            .weight(1f)
             .horizontalScroll(horizontalScrollState)
     ) {
         LazyColumn(
@@ -252,6 +253,8 @@ fun ClassicTreeView(
         }
     }
 }
+    com.example.ui.components.SharedAssetLegend(settings)
+}
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -277,7 +280,7 @@ fun ClassicTreeNodeRow(
         AssetColorUtils.getPaletteForNode(node.name, node.categoryTag)
     }
     val nodeShadedColor = remember(node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark) {
-        AssetColorUtils.getNodeShadedColor(node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark)
+        AssetColorUtils.getNodeShadedColor(settings.customAssetColors, node.name, node.categoryTag, node.depth, node.isGroup, colors.isDark)
     }
 
     // Slash-separated metrics text: e.g. "۲۵.۴٪ کل / ۴۰.۲٪ گروه / ۱۵.۲ م.ت"

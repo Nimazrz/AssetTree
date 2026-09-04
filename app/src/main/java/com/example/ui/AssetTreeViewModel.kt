@@ -202,10 +202,14 @@ class AssetTreeViewModel(application: Application) : AndroidViewModel(applicatio
         repository.updateDisplaySettings(settings)
     }
 
-    fun onUpdateThemePreset(preset: AppThemePreset) {
-        val current = displaySettings.value
-        repository.updateDisplaySettings(current.copy(themePreset = preset))
+    fun saveCurrentSettingsAsDefault() {
+        repository.saveCurrentSettingsAsDefault()
     }
+
+    fun restoreSettingsToDefault() {
+        repository.restoreSettingsToDefault()
+    }
+
 
     fun onUpdateFontSize(fontSize: AppFontSize) {
         val current = displaySettings.value

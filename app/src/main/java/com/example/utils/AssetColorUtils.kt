@@ -137,8 +137,24 @@ object AssetColorUtils {
         DEFAULT_PALETTE
     )
 
-    fun getPaletteForNode(name: String, categoryTag: String? = null): AssetColorTheme {
+    fun getPaletteForNode(name: String, categoryTag: String? = null, customColors: Map<String, Long> = emptyMap()): AssetColorTheme {
         val combined = "${name.lowercase()} ${categoryTag?.lowercase() ?: ""}"
+        
+        // 1. Check custom colors first
+        val matchingCustomColor = customColors.entries.firstOrNull { combined.contains(it.key.lowercase()) }
+        if (matchingCustomColor != null) {
+            val p = Color(matchingCustomColor.value)
+            return AssetColorTheme(
+                primary = p,
+                lightTint = p.copy(alpha=0.6f),
+                darkShade = p.copy(alpha=0.9f),
+                containerBgDark = p.copy(alpha=0.2f),
+                containerBgLight = p.copy(alpha=0.15f),
+                textOrIconColor = p
+            )
+        }
+        
+
 
         return when {
             // Gold & Gold Funds / طلا و مسکوکات طلا و صندوق‌های طلا (انواع زرد و طلایی)
@@ -187,13 +203,14 @@ object AssetColorUtils {
      * Compute shaded color for nodes in trees or charts (پر رنگ / کمرنگ بر اساس عمق و سطح)
      */
     fun getNodeShadedColor(
+        customColors: Map<String, Long> = emptyMap(),
         name: String,
         categoryTag: String? = null,
         depth: Int = 0,
         isGroup: Boolean = false,
         isDark: Boolean = true
     ): Color {
-        val palette = getPaletteForNode(name, categoryTag)
+        val palette = getPaletteForNode(name, categoryTag, customColors)
         return when (depth) {
             0 -> palette.primary
             1 -> if (isGroup) palette.primary else palette.textOrIconColor

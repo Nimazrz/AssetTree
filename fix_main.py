@@ -1,16 +1,33 @@
+import re
+
 with open("app/src/main/java/com/example/MainActivity.kt", "r") as f:
     content = f.read()
 
-content = content.replace(
-    "ModernTreeView(\n                                rootCalculated = root",
-    "ModernTreeView(\n                                activeView = activeView,\n                                onSelectView = { viewModel.setActiveView(it) },\n                                rootCalculated = root"
-)
+old_call = r"""        SettingsDialog\(
+            settings = displaySettings,
+            rootCalculated = root,
+            onDismiss = \{ viewModel\.setSettingsOpen\(false\) \},
+            onUpdateSettings = \{ viewModel\.onUpdateSettings\(it\) \},
+            onExportBackupJson = \{ viewModel\.repository\.exportBackupJson\(\) \},
+            onImportBackupJson = \{ viewModel\.onRestoreJsonBackup\(it\) \},
+            onResetAllData = \{ viewModel\.onResetAllData\(\) \},
+            onWipeFinancialData = \{ viewModel\.onWipeDatabaseToZero\(\) \}
+        \)"""
 
-content = content.replace(
-    "ClassicTreeView(\n                                rootCalculated = root",
-    "ClassicTreeView(\n                                activeView = activeView,\n                                onSelectView = { viewModel.setActiveView(it) },\n                                rootCalculated = root"
-)
+new_call = """        SettingsDialog(
+            settings = displaySettings,
+            rootCalculated = root,
+            onDismiss = { viewModel.setSettingsOpen(false) },
+            onUpdateSettings = { viewModel.onUpdateSettings(it) },
+            onExportBackupJson = { viewModel.repository.exportBackupJson() },
+            onImportBackupJson = { viewModel.onRestoreJsonBackup(it) },
+            onResetAllData = { viewModel.onResetAllData() },
+            onWipeFinancialData = { viewModel.onWipeDatabaseToZero() },
+            onSaveCurrentSettingsAsDefault = { viewModel.saveCurrentSettingsAsDefault() },
+            onRestoreSettingsToDefault = { viewModel.restoreSettingsToDefault() }
+        )"""
+
+content = re.sub(old_call, new_call, content)
 
 with open("app/src/main/java/com/example/MainActivity.kt", "w") as f:
     f.write(content)
-
