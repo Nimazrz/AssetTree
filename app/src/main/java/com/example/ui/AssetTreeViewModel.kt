@@ -3,10 +3,8 @@ package com.example.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Room
 import com.example.core.TreeEngine
 import com.example.data.local.AppDatabase
-import com.example.data.local.ROOT_NODE_ID
 import com.example.data.model.*
 import com.example.data.repository.AssetRepository
 import kotlinx.coroutines.flow.*

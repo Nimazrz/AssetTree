@@ -35,125 +35,84 @@ object TreeEngine {
     )
 
     fun evaluateTree(nodes: List<StoredNodeEntity>): CalculatedTreeResult {
-        val workingNodes = nodes.toMutableList()
-        var rootStored = workingNodes.find { isRootNode(it.id, it.parentId) }
-        if (rootStored == null) {
-            rootStored = createDefaultRootNode()
-            workingNodes.add(0, rootStored)
-        }
+        val workingNodes = nodes.distinctBy(StoredNodeEntity::id).toMutableList()
+        val root = workingNodes.find { it.id == ROOT_NODE_ID }
+            ?: workingNodes.find { it.parentId == null }
+            ?: createDefaultRootNode().also { workingNodes.add(0, it) }
+        val childrenByParentId = workingNodes
+            .filter { it.parentId != null && it.id != root.id }
+            .groupBy { it.parentId!! }
 
-        val nodeMap = workingNodes.associateBy { it.id }
-        val childrenMap = mutableMapOf<String, MutableList<StoredNodeEntity>>()
-        for (node in workingNodes) {
-            val pId = node.parentId
-            if (pId != null) {
-                childrenMap.getOrPut(pId) { mutableListOf() }.add(node)
-            }
-        }
+        val calculatedNodes = mutableMapOf<String, CalculatedNode>()
 
-        val calculatedMap = mutableMapOf<String, CalculatedNode>()
+        fun calculateNode(node: StoredNodeEntity, depth: Int, ancestors: Set<String>): CalculatedNode {
+            // Invalid data must not make the UI recurse forever. A cyclic branch is ignored.
+            val children = childrenByParentId[node.id].orEmpty()
+                .filterNot { it.id in ancestors }
+                .map { child -> calculateNode(child, depth + 1, ancestors + node.id) }
 
-        // Step 1: Bottom-up Post-order evaluation
-        fun evaluateNodePostOrder(nodeId: String, depth: Int): CalculatedNode {
-            val raw = nodeMap[nodeId] ?: StoredNodeEntity(
-                id = nodeId,
-                parentId = null,
-                name = "نامشخص",
-                quantity = 0.0,
-                unit = "واحد",
-                unitPrice = 0.0
-            )
-
-            val directChildrenRaw = childrenMap[nodeId] ?: emptyList()
-            val directChildrenCalculated = directChildrenRaw.map { child ->
-                evaluateNodePostOrder(child.id, depth + 1)
-            }
-
-            val isGroup = directChildrenCalculated.isNotEmpty()
-            val quantity: Double
-            val unitPrice: Double
-            val totalValue: Double
-
-            if (isGroup) {
-                // Group node: value is sum of children values
-                val sumChildrenValue = directChildrenCalculated.sumOf { it.totalValue }
-                quantity = 1.0
-                unitPrice = sumChildrenValue
-                totalValue = sumChildrenValue
-            } else {
-                // Leaf asset: totalValue = quantity * unitPrice
-                quantity = raw.quantity
-                unitPrice = raw.unitPrice
-                totalValue = quantity * unitPrice
-            }
-
-            val childCount = directChildrenCalculated.sumOf { 1 + it.childCount }
-
-            val calculated = CalculatedNode(
-                id = raw.id,
-                parentId = raw.parentId,
-                name = raw.name,
-                quantity = quantity,
-                unit = raw.unit,
-                unitPrice = unitPrice,
-                totalValue = totalValue,
-                percentOfTotal = 0.0,
-                percentOfGroup = 0.0,
-                isGroup = isGroup,
-                children = directChildrenCalculated,
+            val totalValue = if (children.isEmpty()) node.quantity * node.unitPrice else children.sumOf { it.totalValue }
+            val calculated = node.toCalculatedNode(
+                children = children,
                 depth = depth,
-                childCount = childCount,
-                createdAt = raw.createdAt,
-                updatedAt = raw.updatedAt,
-                categoryTag = raw.categoryTag
+                totalValue = totalValue,
+                isGroup = children.isNotEmpty()
             )
-            calculatedMap[nodeId] = calculated
+            calculatedNodes[node.id] = calculated
             return calculated
         }
 
-        val initialRoot = evaluateNodePostOrder(rootStored.id, 0)
-        val rootTotalValue = initialRoot.totalValue
-
-        // Step 2: Assign percentages
-        fun assignPercentages(node: CalculatedNode, parentTotalValue: Double): CalculatedNode {
-            val pTotal = if (isRootNode(node.id, node.parentId)) {
-                100.0
-            } else if (rootTotalValue > 0.0) {
-                (node.totalValue / rootTotalValue) * 100.0
-            } else {
-                0.0
-            }
-
-            val pGroup = if (isRootNode(node.id, node.parentId)) {
-                100.0
-            } else if (parentTotalValue > 0.0) {
-                (node.totalValue / parentTotalValue) * 100.0
-            } else {
-                0.0
-            }
-
-            val updatedChildren = node.children.map { child ->
-                assignPercentages(child, node.totalValue)
-            }
-
-            val updatedNode = node.copy(
-                percentOfTotal = pTotal,
-                percentOfGroup = pGroup,
-                children = updatedChildren
-            )
-            calculatedMap[node.id] = updatedNode
-            return updatedNode
-        }
-
-        val finalRoot = assignPercentages(initialRoot, rootTotalValue)
-        val allCalculated = calculatedMap.values.toList()
+        val initialRoot = calculateNode(root, depth = 0, ancestors = emptySet())
+        val finalRoot = applyPercentages(initialRoot, initialRoot.totalValue, initialRoot.totalValue, calculatedNodes)
+        val allCalculated = calculatedNodes.values.toList()
 
         return CalculatedTreeResult(
             rootCalculated = finalRoot,
-            calculatedMap = calculatedMap,
+            calculatedMap = calculatedNodes,
             allCalculated = allCalculated
         )
     }
+
+    private fun StoredNodeEntity.toCalculatedNode(
+        children: List<CalculatedNode>,
+        depth: Int,
+        totalValue: Double,
+        isGroup: Boolean
+    ) = CalculatedNode(
+        id = id,
+        parentId = parentId,
+        name = name,
+        quantity = if (isGroup) 1.0 else quantity,
+        unit = unit,
+        unitPrice = if (isGroup) totalValue else unitPrice,
+        totalValue = totalValue,
+        isGroup = isGroup,
+        children = children,
+        depth = depth,
+        childCount = children.sumOf { 1 + it.childCount },
+        createdAt = createdAt,
+        updatedAt = updatedAt,
+        categoryTag = categoryTag
+    )
+
+    private fun applyPercentages(
+        node: CalculatedNode,
+        parentTotal: Double,
+        rootTotal: Double,
+        calculatedNodes: MutableMap<String, CalculatedNode>
+    ): CalculatedNode {
+        val isRoot = isRootNode(node.id, node.parentId)
+        val updatedNode = node.copy(
+            percentOfTotal = if (isRoot) 100.0 else percentageOf(node.totalValue, rootTotal),
+            percentOfGroup = if (isRoot) 100.0 else percentageOf(node.totalValue, parentTotal),
+            children = node.children.map { applyPercentages(it, node.totalValue, rootTotal, calculatedNodes) }
+        )
+        calculatedNodes[updatedNode.id] = updatedNode
+        return updatedNode
+    }
+
+    private fun percentageOf(value: Double, total: Double): Double =
+        if (total > 0.0) (value / total) * 100.0 else 0.0
 
     fun checkCycle(nodes: List<StoredNodeEntity>, movingNodeId: String, newParentId: String?): Boolean {
         if (movingNodeId == newParentId) return true

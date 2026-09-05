@@ -38,4 +38,28 @@ class ExampleRobolectricTest {
         assertEquals(3, root.childCount)
         assertEquals(2, root.children[0].childCount)
     }
+
+    @Test
+    fun `tree calculation uses a generated root when the database is empty`() {
+        val result = TreeEngine.evaluateTree(emptyList())
+
+        assertEquals(ROOT_NODE_ID, result.rootCalculated.id)
+        assertEquals(0.0, result.rootCalculated.totalValue, 0.0)
+        assertEquals(100.0, result.rootCalculated.percentOfTotal, 0.0)
+    }
+
+    @Test
+    fun `tree calculation ignores detached nodes`() {
+        val nodes = listOf(
+            StoredNodeEntity(ROOT_NODE_ID, null, "کل دارایی‌ها", 1.0, "سبد", 0.0),
+            StoredNodeEntity("leaf", ROOT_NODE_ID, "سهام", 2.0, "سهم", 100.0),
+            StoredNodeEntity("orphan", "missing-parent", "رها", 99.0, "سهم", 100.0)
+        )
+
+        val result = TreeEngine.evaluateTree(nodes)
+
+        assertEquals(200.0, result.rootCalculated.totalValue, 0.0)
+        assertEquals(listOf("leaf"), result.rootCalculated.children.map { it.id })
+        assertEquals(setOf(ROOT_NODE_ID, "leaf"), result.calculatedMap.keys)
+    }
 }
