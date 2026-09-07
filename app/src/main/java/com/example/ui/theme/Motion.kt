@@ -10,6 +10,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 
+import androidx.compose.runtime.getValue
 /**
  * Shared "press to shrink slightly" tactile feedback for tappable surfaces
  * (cards, pills, icon buttons). Purely visual — chain it onto an existing
