@@ -26,6 +26,7 @@ import com.example.data.model.DisplaySettings
 import com.example.data.model.SortConfig
 import com.example.data.model.SortField
 import com.example.ui.theme.AppTheme
+import com.example.ui.theme.bounceClick
 
 @Composable
 fun SharedViewHeader(
@@ -47,61 +48,70 @@ fun SharedViewHeader(
     val viewModes = settings.customViewOrder.ifEmpty { AppViewMode.values().toList() }
 
     Surface(
-        color = colors.surfaceVariant.copy(alpha = 0.4f),
-        shape = RoundedCornerShape(12.dp),
+        color = colors.surfaceVariant.copy(alpha = 0.5f),
+        shape = RoundedCornerShape(18.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.5f)),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 4.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier.fillMaxWidth().padding(10.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            // Row 1: Chart Selector + Sort + Expand/Collapse
+            // Row 1: Chart Selector pill + Sort + Expand/Collapse
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Chart Selector (Left)
+                // Chart Selector (glass pill)
                 Box {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    Surface(
+                        shape = RoundedCornerShape(50),
+                        color = colors.primaryContainer,
                         modifier = Modifier
+                            .bounceClick()
                             .clickable { showChartDropdown = true }
-                            .padding(horizontal = 4.dp, vertical = 2.dp)
                     ) {
-                        Icon(
-                            imageVector = when (activeView) {
-                                AppViewMode.TREEMAP -> Icons.Default.Dashboard
-                                AppViewMode.CLASSIC_TREE -> Icons.Default.FormatListBulleted
-                                AppViewMode.TREE -> Icons.Default.AccountTree
-                                AppViewMode.CHART -> Icons.Default.PieChart
-                                AppViewMode.BAR_CHART -> Icons.Default.BarChart
-                                AppViewMode.PIE_CHART -> Icons.Default.DonutSmall
-                                AppViewMode.ANALYTICS -> Icons.Default.Analytics
-                            },
-                            contentDescription = null,
-                            tint = colors.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
-                        Text(
-                            text = activeView.titleFa,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.primary
-                        )
-                        Icon(
-                            imageVector = Icons.Default.ArrowDropDown,
-                            contentDescription = null,
-                            tint = colors.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(5.dp),
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Icon(
+                                imageVector = when (activeView) {
+                                    AppViewMode.TREEMAP -> Icons.Default.Dashboard
+                                    AppViewMode.CLASSIC_TREE -> Icons.Default.FormatListBulleted
+                                    AppViewMode.TREE -> Icons.Default.AccountTree
+                                    AppViewMode.CHART -> Icons.Default.PieChart
+                                    AppViewMode.BAR_CHART -> Icons.Default.BarChart
+                                    AppViewMode.PIE_CHART -> Icons.Default.DonutSmall
+                                    AppViewMode.ANALYTICS -> Icons.Default.Analytics
+                                },
+                                contentDescription = null,
+                                tint = colors.primary,
+                                modifier = Modifier.size(15.dp)
+                            )
+                            Text(
+                                text = activeView.titleFa,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = colors.primary
+                            )
+                            Icon(
+                                imageVector = Icons.Default.ArrowDropDown,
+                                contentDescription = null,
+                                tint = colors.primary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
                     }
 
                     DropdownMenu(
                         expanded = showChartDropdown,
                         onDismissRequest = { showChartDropdown = false },
-                        modifier = Modifier.background(colors.surface)
+                        modifier = Modifier
+                            .background(colors.surface, RoundedCornerShape(16.dp))
+                            .clip(RoundedCornerShape(16.dp))
                     ) {
                         viewModes.forEach { mode ->
                             val isSelected = activeView == mode
@@ -125,33 +135,42 @@ fun SharedViewHeader(
                 }
 
                 if (showSearchAndSort) {
-                    // Sort (Middle-Right)
+                    // Sort pill
                     Box {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        Surface(
+                            shape = RoundedCornerShape(50),
+                            color = colors.surface,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, colors.border),
                             modifier = Modifier
+                                .bounceClick()
                                 .clickable { showSortMenu = true }
-                                .padding(horizontal = 4.dp, vertical = 2.dp)
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.Sort,
-                                contentDescription = null,
-                                tint = colors.primary,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Text(
-                                text = sortConfig.field.labelFa,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = colors.primary
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(5.dp),
+                                modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Sort,
+                                    contentDescription = null,
+                                    tint = colors.primary,
+                                    modifier = Modifier.size(15.dp)
+                                )
+                                Text(
+                                    text = sortConfig.field.labelFa,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = colors.primary
+                                )
+                            }
                         }
 
                         DropdownMenu(
                             expanded = showSortMenu,
                             onDismissRequest = { showSortMenu = false },
-                            modifier = Modifier.background(colors.surface)
+                            modifier = Modifier
+                                .background(colors.surface, RoundedCornerShape(16.dp))
+                                .clip(RoundedCornerShape(16.dp))
                         ) {
                             SortField.values().forEach { field ->
                                 val isSelected = sortConfig.field == field
@@ -180,19 +199,19 @@ fun SharedViewHeader(
                         }
                     }
 
-                    // Expand / Collapse (Right)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                        IconButton(onClick = onExpandAll, modifier = Modifier.size(24.dp)) {
+                    // Expand / Collapse
+                    Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        IconButton(onClick = onExpandAll, modifier = Modifier.size(26.dp).bounceClick()) {
                             Icon(Icons.Default.UnfoldMore, contentDescription = "بسط دادن", tint = colors.primary, modifier = Modifier.size(16.dp))
                         }
-                        IconButton(onClick = onCollapseAll, modifier = Modifier.size(24.dp)) {
+                        IconButton(onClick = onCollapseAll, modifier = Modifier.size(26.dp).bounceClick()) {
                             Icon(Icons.Default.UnfoldLess, contentDescription = "جمع کردن", tint = colors.primary, modifier = Modifier.size(16.dp))
                         }
                     }
                 }
             }
 
-            // Row 2: Search (Only for tree views)
+            // Row 2: Search
             if (showSearchAndSort) {
                 OutlinedTextField(
                     value = searchQuery,
@@ -208,15 +227,15 @@ fun SharedViewHeader(
                             }
                         }
                     },
-                    shape = RoundedCornerShape(10.dp),
+                    shape = RoundedCornerShape(14.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
-                        focusedBorderColor = Color.Transparent,
+                        focusedContainerColor = colors.inputBackground,
+                        unfocusedContainerColor = colors.inputBackground,
+                        focusedBorderColor = colors.primary.copy(alpha = 0.6f),
                         unfocusedBorderColor = Color.Transparent,
                         cursorColor = colors.primary
                     ),
-                    modifier = Modifier.fillMaxWidth().height(42.dp)
+                    modifier = Modifier.fillMaxWidth().height(46.dp)
                 )
             }
         }
@@ -238,8 +257,8 @@ fun SharedAssetLegend(settings: com.example.data.model.DisplaySettings) {
     )
 
     Surface(
-        shape = RoundedCornerShape(10.dp),
-        color = colors.surface.copy(alpha = 0.5f),
+        shape = RoundedCornerShape(14.dp),
+        color = colors.surface.copy(alpha = 0.6f),
         border = androidx.compose.foundation.BorderStroke(1.dp, colors.border),
         modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 2.dp)
     ) {

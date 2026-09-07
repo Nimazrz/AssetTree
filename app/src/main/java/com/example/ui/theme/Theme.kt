@@ -47,66 +47,68 @@ data class AppThemeColors(
     val cardHighlight: Color
 )
 
+// Same signature/field-set as before — only the underlying values were tuned for
+// a softer, higher-contrast, more "modern fintech app" feel.
 fun getAppColors(primaryHex: Long, isDark: Boolean): AppThemeColors {
     val primaryColor = Color(primaryHex)
     return if (isDark) {
-        val bg = Color(0xFF090A0E)
-        val surfColor = Color(0xFF141620)
+        val bg = Color(0xFF0A0B10)
+        val surfColor = Color(0xFF15171F)
         AppThemeColors(
             isDark = true,
-            background = bg.copy(alpha=0.9f),
+            background = bg,
             surface = surfColor,
-            surfaceVariant = Color(0xFF1B1E2B),
-            border = Color(0xFF282D3E),
-            textPrimary = Color(0xFFF3F4F8),
-            textSecondary = Color(0xFF9EA6BB),
-            textMuted = Color(0xFF687085),
+            surfaceVariant = Color(0xFF1C1F2B),
+            border = Color(0xFF262A38),
+            textPrimary = Color(0xFFF5F6FA),
+            textSecondary = Color(0xFFA3AABF),
+            textMuted = Color(0xFF6B7286),
             primary = primaryColor,
-            primaryContainer = primaryColor.copy(alpha = 0.25f),
-            onPrimaryContainer = Color(0xFFCEE3FF),
-            gain = Color(0xFF10B981),
-            gainContainer = Color(0xFF0E382A),
-            onGainContainer = Color(0xFFA7F3D0),
-            loss = Color(0xFFF43F5E),
-            lossContainer = Color(0xFF45111E),
-            onLossContainer = Color(0xFFFECDD3),
-            warning = Color(0xFFF59E0B),
-            warningContainer = Color(0xFF422806),
-            onWarningContainer = Color(0xFFFDE68A),
-            inputBackground = Color(0xFF171A25),
+            primaryContainer = primaryColor.copy(alpha = 0.22f),
+            onPrimaryContainer = Color(0xFFD6E7FF),
+            gain = Color(0xFF22C55E),
+            gainContainer = Color(0xFF0F3524),
+            onGainContainer = Color(0xFFB4F5D0),
+            loss = Color(0xFFF75A6B),
+            lossContainer = Color(0xFF421420),
+            onLossContainer = Color(0xFFFFD2DA),
+            warning = Color(0xFFF5A524),
+            warningContainer = Color(0xFF3D2807),
+            onWarningContainer = Color(0xFFFFE1A8),
+            inputBackground = Color(0xFF191C27),
             inputBorder = Color(0xFF31364A),
-            inputText = Color(0xFFF3F4F8),
-            inputPlaceholder = Color(0xFF70778D),
-            cardHighlight = Color(0xFF202434)
+            inputText = Color(0xFFF5F6FA),
+            inputPlaceholder = Color(0xFF747C93),
+            cardHighlight = Color(0xFF232739)
         )
     } else {
-        val bg = Color(0xFFFAFAFA)
+        val bg = Color(0xFFF7F8FB)
         AppThemeColors(
             isDark = false,
-            background = bg.copy(alpha=0.9f),
-            surface = Color(0xFFF2F4F7),
-            surfaceVariant = Color(0xFFE5E7EB),
-            border = Color(0xFFDDE2EE),
-            textPrimary = Color(0xFF0F172A),
-            textSecondary = Color(0xFF475569),
-            textMuted = Color(0xFF94A3B8),
+            background = bg,
+            surface = Color(0xFFFFFFFF),
+            surfaceVariant = Color(0xFFEEF1F6),
+            border = Color(0xFFE2E6EF),
+            textPrimary = Color(0xFF11151F),
+            textSecondary = Color(0xFF4C5567),
+            textMuted = Color(0xFF9AA2B4),
             primary = primaryColor,
-            primaryContainer = primaryColor.copy(alpha = 0.15f),
+            primaryContainer = primaryColor.copy(alpha = 0.12f),
             onPrimaryContainer = primaryColor,
-            gain = Color(0xFF00875A),
-            gainContainer = Color(0xFFD4F6E5),
-            onGainContainer = Color(0xFF003822),
-            loss = Color(0xFFDC2626),
-            lossContainer = Color(0xFFFFE4E6),
-            onLossContainer = Color(0xFF5B000C),
-            warning = Color(0xFFD97706),
-            warningContainer = Color(0xFFFEF3C7),
-            onWarningContainer = Color(0xFF451A03),
-            inputBackground = Color(0xFFF3F4F6),
-            inputBorder = Color(0xFFCBD5E1),
-            inputText = Color(0xFF0F172A),
-            inputPlaceholder = Color(0xFF94A3B8),
-            cardHighlight = Color(0xFFF1F5F9)
+            gain = Color(0xFF0C8F5C),
+            gainContainer = Color(0xFFDCF7E7),
+            onGainContainer = Color(0xFF00431F),
+            loss = Color(0xFFDC2647),
+            lossContainer = Color(0xFFFFE2E7),
+            onLossContainer = Color(0xFF5D0016),
+            warning = Color(0xFFC4740A),
+            warningContainer = Color(0xFFFEF0D6),
+            onWarningContainer = Color(0xFF432B02),
+            inputBackground = Color(0xFFF4F5F9),
+            inputBorder = Color(0xFFD9DEE9),
+            inputText = Color(0xFF11151F),
+            inputPlaceholder = Color(0xFF9AA2B4),
+            cardHighlight = Color(0xFFEFF2F8)
         )
     }
 }
@@ -120,20 +122,20 @@ object AppTheme {
     val colors: AppThemeColors
         @Composable
         get() = LocalAppThemeColors.current
-    
+
     @Composable
     fun getDepthColor(depth: Int, isSelected: Boolean): Color {
         if (isSelected) return colors.primary
-        
+
         val isDark = colors.isDark
         return when (depth) {
-            0 -> colors.textPrimary // Root (White in dark mode, Black in light mode)
-            1 -> if (isDark) Color(0xFF4ADE80) else Color(0xFF16A34A) // Level 1 (Green)
-            2 -> if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706) // Level 2 (Yellow/Orange)
-            3 -> if (isDark) Color(0xFF60A5FA) else Color(0xFF2563EB) // Level 3 (Blue)
-            4 -> if (isDark) Color(0xFFF472B6) else Color(0xFFDB2777) // Level 4 (Pink)
-            5 -> if (isDark) Color(0xFFC084FC) else Color(0xFF9333EA) // Level 5 (Purple)
-            else -> if (isDark) Color(0xFF9CA3AF) else Color(0xFF4B5563) // Level 6+ (Gray)
+            0 -> colors.textPrimary
+            1 -> if (isDark) Color(0xFF4ADE80) else Color(0xFF16A34A)
+            2 -> if (isDark) Color(0xFFFBBF24) else Color(0xFFD97706)
+            3 -> if (isDark) Color(0xFF60A5FA) else Color(0xFF2563EB)
+            4 -> if (isDark) Color(0xFFF472B6) else Color(0xFFDB2777)
+            5 -> if (isDark) Color(0xFFC084FC) else Color(0xFF9333EA)
+            else -> if (isDark) Color(0xFF9CA3AF) else Color(0xFF4B5563)
         }
     }
 
@@ -142,15 +144,16 @@ object AppTheme {
         get() = MaterialTheme.typography
 }
 
+// Softer, more contemporary corner radii across every Card/Surface/Dialog that
+// references MaterialTheme.shapes instead of a hardcoded RoundedCornerShape.
 val ModernShapes = Shapes(
-    extraSmall = RoundedCornerShape(12.dp),
-    small = RoundedCornerShape(16.dp),
-    medium = RoundedCornerShape(20.dp),
-    large = RoundedCornerShape(24.dp),
-    extraLarge = RoundedCornerShape(32.dp)
+    extraSmall = RoundedCornerShape(14.dp),
+    small = RoundedCornerShape(18.dp),
+    medium = RoundedCornerShape(22.dp),
+    large = RoundedCornerShape(28.dp),
+    extraLarge = RoundedCornerShape(36.dp)
 )
 
-// Super AMOLED Pitch-Black Dark Theme (Custom-optimized for Galaxy A52s 120Hz OLED screen)
 private val DarkColorScheme =
   darkColorScheme(
     primary = DarkAppColors.primary,
@@ -254,4 +257,3 @@ fun MyApplicationTheme(
     MaterialTheme(colorScheme = colorScheme, typography = Typography, shapes = ModernShapes, content = content)
   }
 }
-

@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.DisplaySettings
 import com.example.data.model.AppViewMode
 import com.example.ui.theme.AppTheme
+import com.example.ui.theme.bounceClick
 import com.example.utils.NumberFormatUtils
 import com.example.utils.PersianDateUtils
 
@@ -52,8 +53,7 @@ fun AppTopBar(
     val haptic = LocalHapticFeedback.current
     val colors = AppTheme.colors
     var showMenu by remember { mutableStateOf(false) }
-        var showExitConfirmDialog by remember { mutableStateOf(false) }
-    var showChartDropdown by remember { mutableStateOf(false) }
+    var showExitConfirmDialog by remember { mutableStateOf(false) }
 
     // Real-time Persian Date & Time connected to device clock (updates every second)
     var currentTimeMillis by remember { mutableStateOf(System.currentTimeMillis()) }
@@ -68,7 +68,7 @@ fun AppTopBar(
     }
 
     Surface(
-        color = colors.surface,
+        color = colors.background,
         shadowElevation = 0.dp,
         modifier = Modifier
             .fillMaxWidth()
@@ -76,77 +76,63 @@ fun AppTopBar(
     ) {
         BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
             val isCompact = maxWidth < 380.dp
-            val isTablet = maxWidth >= 600.dp
 
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = if (isCompact) 8.dp else 12.dp, vertical = 6.dp),
+                    .padding(horizontal = if (isCompact) 10.dp else 14.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp)
             ) {
-                // بخش اصلی برنامه با پس‌زمینه متمایز و روشن‌تر و حاشیه خط‌دار ملایم
-                // (نماد برنامه، تاریخ و ساعت، سه نقطه، آیکون خروج، ارزش کل و مبلغ، علامت چشم)
                 Card(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (isDark) colors.surfaceVariant.copy(alpha = 0.7f) else Color(0xFFF8FAFC)
+                        containerColor = if (isDark) colors.surface else Color.White
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.6f)),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, colors.border.copy(alpha = 0.7f)),
+                    elevation = CardDefaults.cardElevation(defaultElevation = if (isDark) 0.dp else 3.dp),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 9.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .padding(horizontal = 14.dp, vertical = 12.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // سطر ۱ هدر اصلی: نماد برنامه (راست) و تاریخ/ساعت نزدیک سه نقطه (چپ) (وظیفه ۵)
+                        // Row 1: app glyph (right) — date/time + undo + overflow menu (left)
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            // راست: نماد برنامه (Custom App Icon)
                             Box(
                                 modifier = Modifier
-                                    .size(if (isCompact) 34.dp else 38.dp)
-                                    .clip(RoundedCornerShape(10.dp))
+                                    .size(if (isCompact) 36.dp else 40.dp)
+                                    .clip(RoundedCornerShape(14.dp))
                                     .background(
                                         Brush.linearGradient(
-                                            listOf(
-                                                Color(0xFF0F172A),
-                                                Color(0xFF1E293B),
-                                                Color(0xFF003B6F)
-                                            )
+                                            listOf(Color(0xFF0F172A), Color(0xFF1E293B), colors.primary.copy(alpha = 0.9f))
                                         )
                                     )
                                     .border(
                                         1.2.dp,
-                                        Brush.linearGradient(
-                                            listOf(Color(0xFFF59E0B), Color(0xFF10B981), Color(0xFF38BDF8))
-                                        ),
-                                        RoundedCornerShape(10.dp)
+                                        Brush.linearGradient(listOf(Color(0xFFF59E0B), Color(0xFF10B981), Color(0xFF38BDF8))),
+                                        RoundedCornerShape(14.dp)
                                     ),
                                 contentAlignment = Alignment.Center
                             ) {
                                 androidx.compose.foundation.Canvas(modifier = Modifier.size(if (isCompact) 22.dp else 24.dp)) {
                                     val w = size.width
                                     val h = size.height
-                                    val trunkColor = Color(0xFFF59E0B) // Gold trunk
-                                    val leaf1 = Color(0xFF10B981) // Emerald
-                                    val leaf2 = Color(0xFF38BDF8) // Sky Blue
-                                    val leaf3 = Color(0xFFA855F7) // Purple
+                                    val trunkColor = Color(0xFFF59E0B)
+                                    val leaf1 = Color(0xFF10B981)
+                                    val leaf2 = Color(0xFF38BDF8)
+                                    val leaf3 = Color(0xFFA855F7)
 
-                                    // Trunk lines
                                     drawLine(trunkColor, Offset(w * 0.5f, h * 0.82f), Offset(w * 0.5f, h * 0.32f), strokeWidth = 3f)
                                     drawLine(trunkColor, Offset(w * 0.5f, h * 0.55f), Offset(w * 0.24f, h * 0.44f), strokeWidth = 2.5f)
                                     drawLine(trunkColor, Offset(w * 0.5f, h * 0.55f), Offset(w * 0.76f, h * 0.44f), strokeWidth = 2.5f)
 
-                                    // Root base node
                                     drawCircle(color = trunkColor, radius = w * 0.14f, center = Offset(w * 0.5f, h * 0.82f))
-
-                                    // Branch leaves / coin nodes
                                     drawCircle(color = leaf1, radius = w * 0.17f, center = Offset(w * 0.5f, h * 0.25f))
                                     drawCircle(color = leaf2, radius = w * 0.13f, center = Offset(w * 0.22f, h * 0.42f))
                                     drawCircle(color = leaf3, radius = w * 0.13f, center = Offset(w * 0.78f, h * 0.42f))
@@ -155,52 +141,50 @@ fun AppTopBar(
 
                             Spacer(modifier = Modifier.weight(1f))
 
-                            // چپ: تاریخ و ساعت زنده شمسی در کنار دکمه بازگشت و سه نقطه (وظیفه ۵)
                             Row(
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                // تاریخ و ساعت زنده شمسی
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
-                                    color = Color.Transparent
+                                    shape = RoundedCornerShape(10.dp),
+                                    color = colors.surfaceVariant.copy(alpha = 0.6f)
                                 ) {
                                     Text(
                                         text = persianDateTimeStr,
-                                        fontSize = if (isCompact) 12.sp else 13.5.sp,
-                                        color = colors.textPrimary,
-                                        fontWeight = FontWeight.Bold,
-                                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.5.dp)
+                                        fontSize = if (isCompact) 11.sp else 12.5.sp,
+                                        color = colors.textSecondary,
+                                        fontWeight = FontWeight.SemiBold,
+                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)
                                     )
                                 }
 
                                 if (undoCount > 0) {
                                     IconButton(
                                         onClick = onUndo,
-                                        modifier = Modifier.size(32.dp)
+                                        modifier = Modifier.size(32.dp).bounceClick()
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.Undo,
                                             contentDescription = "بازگشت",
                                             tint = colors.warning,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(19.dp)
                                         )
                                     }
                                 }
 
-                                // سه نقطه منوی امکانات
                                 Box {
                                     IconButton(
                                         onClick = { showMenu = true },
                                         modifier = Modifier
                                             .size(32.dp)
+                                            .bounceClick()
                                             .testTag("btn_three_dots_menu")
                                     ) {
                                         Icon(
                                             imageVector = Icons.Default.MoreVert,
                                             contentDescription = "منوی امکانات",
                                             tint = colors.textPrimary,
-                                            modifier = Modifier.size(20.dp)
+                                            modifier = Modifier.size(19.dp)
                                         )
                                     }
 
@@ -208,13 +192,10 @@ fun AppTopBar(
                                         expanded = showMenu,
                                         onDismissRequest = { showMenu = false },
                                         modifier = Modifier
-                                            .background(colors.surface, RoundedCornerShape(14.dp))
-                                            .border(1.dp, colors.border.copy(alpha = 0.5f), RoundedCornerShape(14.dp))
-                                            .clip(RoundedCornerShape(14.dp))
+                                            .background(colors.surface, RoundedCornerShape(18.dp))
+                                            .border(1.dp, colors.border.copy(alpha = 0.5f), RoundedCornerShape(18.dp))
+                                            .clip(RoundedCornerShape(18.dp))
                                     ) {
-
-
-                                        // Excel Import
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -225,11 +206,7 @@ fun AppTopBar(
                                                 )
                                             },
                                             leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.TableChart,
-                                                    contentDescription = null,
-                                                    tint = colors.gain
-                                                )
+                                                Icon(imageVector = Icons.Default.TableChart, contentDescription = null, tint = colors.gain)
                                             },
                                             onClick = {
                                                 showMenu = false
@@ -237,7 +214,6 @@ fun AppTopBar(
                                             }
                                         )
 
-                                        // Symbol Book
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -248,11 +224,7 @@ fun AppTopBar(
                                                 )
                                             },
                                             leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.MenuBook,
-                                                    contentDescription = null,
-                                                    tint = Color(0xFF8B5CF6)
-                                                )
+                                                Icon(imageVector = Icons.Default.MenuBook, contentDescription = null, tint = Color(0xFF8B5CF6))
                                             },
                                             onClick = {
                                                 showMenu = false
@@ -262,7 +234,6 @@ fun AppTopBar(
 
                                         HorizontalDivider(color = colors.border.copy(alpha = 0.4f), modifier = Modifier.padding(horizontal = 8.dp))
 
-                                        // Settings
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -273,11 +244,7 @@ fun AppTopBar(
                                                 )
                                             },
                                             leadingIcon = {
-                                                Icon(
-                                                    imageVector = Icons.Default.Settings,
-                                                    contentDescription = null,
-                                                    tint = colors.textSecondary
-                                                )
+                                                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = colors.textSecondary)
                                             },
                                             onClick = {
                                                 showMenu = false
@@ -289,7 +256,7 @@ fun AppTopBar(
                             }
                         }
 
-                        // سطر ۲ هدر اصلی: ارزش کل و مبلغ (راست) و آیکون خروج سمت چپ آیکون چشم (چپ)
+                        // Row 2: total value (right) — eye toggle + exit (left)
                         val formattedVal = if (settings.privacyMode) {
                             "••••••••"
                         } else {
@@ -313,24 +280,32 @@ fun AppTopBar(
                             ) {
                                 Text(
                                     text = "ارزش کل:",
-                                    fontSize = if (isCompact) 13.sp else 14.5.sp,
-                                    fontWeight = FontWeight.Bold,
+                                    fontSize = if (isCompact) 12.5.sp else 14.sp,
+                                    fontWeight = FontWeight.SemiBold,
                                     color = colors.textSecondary
                                 )
-                                Text(
-                                    text = formattedVal,
+                                AnimatedAmountText(
+                                    rawValue = totalPortfolioValue,
+                                    displayText = formattedVal,
+                                    formatter = { v ->
+                                        NumberFormatUtils.formatCurrency(
+                                            v,
+                                            settings.currencyUnit,
+                                            compact = false,
+                                            usePersianDigits = settings.usePersianDigits,
+                                            privacyMode = settings.privacyMode
+                                        )
+                                    },
                                     fontSize = if (isCompact) 18.sp else 22.sp,
                                     fontWeight = FontWeight.Black,
                                     color = colors.primary
                                 )
                             }
 
-                            // سمت چپ: علامت چشم (راست) و آیکون خروج سمت چپ آیکون چشم (چپ) (وظیفه ۲)
                             Row(
                                 verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                horizontalArrangement = Arrangement.spacedBy(2.dp)
                             ) {
-                                // علامت چشم (مخفی‌سازی/نمایش مبالغ)
                                 IconButton(
                                     onClick = {
                                         haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
@@ -338,43 +313,43 @@ fun AppTopBar(
                                     },
                                     modifier = Modifier
                                         .size(32.dp)
+                                        .bounceClick()
                                         .testTag("btn_toggle_privacy")
                                 ) {
                                     Icon(
                                         imageVector = if (settings.privacyMode) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                         contentDescription = if (settings.privacyMode) "نمایش مبالغ" else "مخفی‌سازی مبالغ",
                                         tint = colors.primary,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(19.dp)
                                     )
                                 }
 
-                                // آیکون خروج سمت چپ آیکون چشم (وظیفه ۲)
                                 IconButton(
                                     onClick = { showExitConfirmDialog = true },
                                     modifier = Modifier
                                         .size(32.dp)
+                                        .bounceClick()
                                         .testTag("btn_exit_app")
                                 ) {
                                     Icon(
                                         imageVector = Icons.AutoMirrored.Filled.ExitToApp,
                                         contentDescription = "خروج از برنامه",
                                         tint = colors.loss,
-                                        modifier = Modifier.size(20.dp)
+                                        modifier = Modifier.size(19.dp)
                                     )
                                 }
                             }
                         }
                     }
                 }
-
             }
         }
     }
 
-    // دیالوگ اطمینان از خروج (وظیفه ۳)
     if (showExitConfirmDialog) {
         AlertDialog(
             onDismissRequest = { showExitConfirmDialog = false },
+            shape = RoundedCornerShape(24.dp),
             icon = {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ExitToApp,
@@ -404,6 +379,7 @@ fun AppTopBar(
                         showExitConfirmDialog = false
                         (context as? Activity)?.finish()
                     },
+                    shape = RoundedCornerShape(14.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = colors.loss)
                 ) {
                     Text("خروج از برنامه", color = Color.White, fontWeight = FontWeight.Bold)
@@ -412,6 +388,7 @@ fun AppTopBar(
             dismissButton = {
                 OutlinedButton(
                     onClick = { showExitConfirmDialog = false },
+                    shape = RoundedCornerShape(14.dp),
                     border = androidx.compose.foundation.BorderStroke(1.dp, colors.border)
                 ) {
                     Text("انصراف", color = colors.textPrimary)
@@ -419,6 +396,4 @@ fun AppTopBar(
             }
         )
     }
-
-    // Theme Preset & Mode Selector Dialog (وظیفه ۳)
-    }
+}
